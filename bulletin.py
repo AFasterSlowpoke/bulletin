@@ -2,11 +2,19 @@ from PIL import Image, ImageDraw, ImageFont
 import pandas as pd
 
 class Board:
-    def __init__(self, data, dimensions=(500,500), output_format="jpg", background=None):
+    def __init__(self, data, dimensions=(500,500), output_format="jpg", mode="RGBA", background_color=None):
         self.data = data
 
         self.dimensions = dimensions
         self.output_format = output_format
+        self.mode = mode
+        if background_color is None:
+            if mode == "RGBA":
+                self.background_color = (255,255,255,255)
+            else:
+                self.background_color = (255,255,255)
+        else:
+            self.background_color = background_color
 
         self.pins = []
     
@@ -16,13 +24,23 @@ class Board:
             pins_string += f"{str(pin)}\n"
         
         return f"Board\n{len(self.pins)} Pins\n__________\n{pins_string}"
+    
+    def canvas(self):
+        """
+        Returns a blank image with the board's specified mode and background color
+        """
+
+        return Image.new(self.mode, self.dimensions, self.background_color)
 
     def _text_paint(self, draw: ImageDraw.ImageDraw, pin: "TextPin", content):
+        """
+        Adds a text pin 
+        """
         draw.text(pin.pos, content, font=pin.font, fill=pin.color, align=pin.align)
     
     def paint(self, canvas: Image.Image, draw: ImageDraw.ImageDraw, pin: "Pin", data_index):
         """
-        Adds a single pin to the image of a single row.
+        Adds a single pin to the current canvas.
         """
 
         # Validate argument types
@@ -112,8 +130,10 @@ class Gallery:
 
 def read_from_gsheet(sheet_name, sheet_id, table_id='0'):
     """
-    Returns pandas dataframe of specified Google sheet.
+    Returns pandas dataframe of table of Google sheet with specified sheet name, sheet ID and table ID.
+    Your Google sheet must not be restricted for this function to work.
     """
+
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}&gid={table_id}"
 
     return pd.read_csv(url)
