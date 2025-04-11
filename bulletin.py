@@ -17,7 +17,7 @@ class Board:
         
         return f"Board\n{len(self.pins)} Pins\n__________\n{pins_string}"
 
-    def _text_paint(self, canvas: Image.Image, draw: ImageDraw.ImageDraw, pin: "TextPin", content):
+    def _text_paint(self, draw: ImageDraw.ImageDraw, pin: "TextPin", content):
         draw.text(pin.pos, content, font=pin.font, fill=pin.color, align=pin.align)
     
     def paint(self, canvas: Image.Image, draw: ImageDraw.ImageDraw, pin: "Pin", data_index):
@@ -35,10 +35,10 @@ class Board:
         
         data_row = self.data.iloc[data_index] # Get the row at index
         content = data_row[pin.col] # Get the data at given column specified in pin
-
+ 
         # Pass the pin, canvas and content to the appropriate paint function
         if isinstance(pin, TextPin):
-            self._text_paint(canvas, draw, pin, content)
+            self._text_paint(draw, pin, content)
         elif isinstance(pin, ImagePin):
             print(f"{pin} is an ImagePin")
         else:
@@ -49,6 +49,12 @@ class Board:
     def post(self, data_index):
         """
         Creates the appropriate image for a single row of the data.
+        """
+        pass
+
+    def blueprint(self):
+        """
+        Creates a post, but with all pins displaying their titles.
         """
         pass
 
@@ -103,3 +109,11 @@ class PinCondition:
 
 class Gallery:
     pass
+
+def read_from_gsheet(sheet_name, sheet_id, table_id='0'):
+    """
+    Returns pandas dataframe of specified Google sheet.
+    """
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}&gid={table_id}"
+
+    return pd.read_csv(url)
