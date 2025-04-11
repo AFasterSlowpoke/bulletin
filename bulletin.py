@@ -9,6 +9,7 @@ class Board:
         self.output_format = output_format
         self.mode = mode
         if background_color is None:
+            # Default background_color changes depending on image mode
             if mode == "RGBA":
                 self.background_color = (255,255,255,255)
             else:
@@ -34,9 +35,34 @@ class Board:
 
     def _text_paint(self, draw: ImageDraw.ImageDraw, pin: "TextPin", content):
         """
-        Adds a text pin 
+        Adds a text pin to the current canvas.
         """
-        draw.text(pin.pos, content, font=pin.font, fill=pin.color, align=pin.align)
+
+        # Determine optimal font size
+        bbox = pin.font.getbbox(content)
+        text_width = bbox[2] - bbox[0]
+
+        if text_width <= pin.max_width and pin.fill_mode == "shrink":
+            # In shrink mode, no need to calculate optimal font size if it already
+            font = pin.font
+        else:
+            current_font_size = pin.font_size
+
+            while not pin.max_width-(0.05*pin.max_width) <= text_width <= pin.max_width:
+                # Calculate the length of the text with the current font size
+                font = ImageFont.truetype(pin.font_face, int(current_font_size))
+                bbox = font.getbbox(content)
+                text_width = bbox[2] - bbox[0]
+
+                # Calculate the proportion between the difference and the max width
+                diff = pin.max_width - text_width
+                proportion = diff / pin.max_width
+
+                # Update current font size according to the proportion
+                current_font_size *= (1 + proportion)
+                print(text_width)
+
+        draw.text(pin.pos, content, font=font, fill=pin.color, align=pin.align)
     
     def paint(self, canvas: Image.Image, draw: ImageDraw.ImageDraw, pin: "Pin", data_index):
         """
@@ -103,15 +129,18 @@ class Pin:
         return f"Pin: {self.title}, Column: {self.col}, Position: {self.pos}"
 
 class TextPin(Pin):
-    def __init__(self, title, col, pos, font, font_size, color=(0,0,0), max_length=1000, fill_mode="shrink", align="left"):
+    def __init__(self, title, col, pos, font, font_size=32, color=(0,0,0), max_width=1000, fill_mode="shrink", align="left"):
         super().__init__(title, col, pos)
 
         self.font_face = font
         self.font_size = font_size
         self.color = color
 
-        self.max_length = max_length
-        self.fill_mode = fill_mode
+        self.max_width = max_width
+        if fill_mode in ("fill", "shrink", "cut", "wrap", "wordwrap", "fixed"):
+            self.fill_mode = fill_mode
+        else:
+            raise ValueError(f"Invalid fill mode for TextPin: {fill_mode}, must be fill, shrink, cut, wrap, wordwrap or fixed")
         self.align = align
 
         self.font = ImageFont.truetype(font, font_size)
