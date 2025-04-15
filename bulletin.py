@@ -26,7 +26,7 @@ class Board:
         
         return f"Board\n{len(self.pins)} Pins\n__________\n{pins_string}"
     
-    def canvas(self):
+    def new_canvas(self):
         """
         Returns a blank image with the board's specified mode and background color
         """
@@ -34,7 +34,10 @@ class Board:
         return Image.new(self.mode, self.dimensions, self.background_color)
 
     def _text_paint(self, draw: ImageDraw.ImageDraw, pin: "TextPin", content):
-        def _fit_font_size(content, initial_font_size, font_face, init_text_width):
+        def _fit_font_size(content, initial_font_size, font_face, init_text_width, max_width):
+            """
+            Given a font, some text and a maximum width, calculate the optimal font size.
+            """
             current_font_size = initial_font_size
             text_width = init_text_width
 
@@ -42,14 +45,14 @@ class Board:
             ## never meeting the loop condition, creating an infinite loop.
             ## Temporarily fixed by changing the condition to be more forgiving
 
-            while not pin.max_width-(0.05*pin.max_width) <= text_width <= pin.max_width:
+            while not max_width-(0.05*max_width) <= text_width <= max_width:
                 # Calculate the length of the text with the current font size
                 font = ImageFont.truetype(font_face, int(current_font_size))
                 bbox = font.getbbox(content)
                 text_width = bbox[2] - bbox[0]
 
                 # Calculate the proportion between the difference and the max width
-                diff = pin.max_width - text_width
+                diff = max_width - text_width
                 proportion = diff / text_width
 
                 # Update current font size according to the proportion
@@ -57,6 +60,10 @@ class Board:
 
             return current_font_size
         def _wrap_text(content, font_size, font_face, max_width, wrap_mode):
+            """
+            Given a font and some text, wrap the text either by character or by word.
+            """
+
             result = []
 
             for original_line in content.split("\n"):
@@ -113,17 +120,17 @@ class Board:
         # If the fill mode is "fill" or the fill mode is "shrink" and the text doesn't fit within the max length,
         # fit the font size to the maximum length. Otherwise, use the initial font.
         if pin.fill_mode == "fill" or (text_width > pin.max_width and pin.fill_mode == "shrink"):
-            font_size = _fit_font_size(content, pin.font_size, pin.font_face, text_width)
+            font_size = _fit_font_size(content, pin.font_size, pin.font_face, text_width, pin.max_width)
             font = ImageFont.truetype(pin.font_face, font_size)
         else:
             font = init_font
 
-            if pin.fill_mode == "wrap" or "wordwrap":
+            if pin.fill_mode == "wrap" or pin.fill_mode == "wordwrap":
                 content = _wrap_text(content, pin.font_size, pin.font_face, pin.max_width, pin.fill_mode)
 
         draw.text(pin.pos, content, font=font, fill=pin.color, align=pin.align)
     
-    def paint(self, canvas: Image.Image, draw: ImageDraw.ImageDraw, pin: "Pin", data_index):
+    def paint(self, draw: ImageDraw.ImageDraw, pin: "Pin", data_index):
         """
         Adds a single pin to the current canvas.
         """
@@ -131,8 +138,6 @@ class Board:
         # Validate argument types
         if not isinstance(pin, Pin):
             raise TypeError("Board tried to paint a non-Pin object.")
-        if not isinstance(canvas, Image.Image):
-            raise TypeError("Board.paint() canvas argument is not Image object.")
         if not isinstance(draw, ImageDraw.ImageDraw):
             raise TypeError("Board.paint() draw argument is not ImageDraw object.")
         
@@ -146,14 +151,20 @@ class Board:
             print(f"{pin} is an ImagePin")
         else:
             print(f"{pin} is neither a TextPin or ImagePin")
-
-        canvas.show()
     
-    def post(self, data_index):
+    def post(self, data_index, display=False):
         """
         Creates the appropriate image for a single row of the data.
         """
-        pass
+        
+        canvas = self.new_canvas()
+        draw = ImageDraw.Draw(canvas)
+
+        for pin in self.pins:
+            self.paint(draw, pin, data_index)
+        
+        if display:
+            canvas.show()
 
     def blueprint(self):
         """
