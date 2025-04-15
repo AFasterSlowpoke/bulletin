@@ -34,33 +34,44 @@ class Board:
         return Image.new(self.mode, self.dimensions, self.background_color)
 
     def _text_paint(self, draw: ImageDraw.ImageDraw, pin: "TextPin", content):
-        """
-        Adds a text pin to the current canvas.
-        """
+        def _fit_font_size(content, initial_font_size, font_face, init_text_width):
+            current_font_size = initial_font_size
+            text_width = init_text_width
 
-        # Determine optimal font size
-        bbox = pin.font.getbbox(content)
-        text_width = bbox[2] - bbox[0]
-
-        if text_width <= pin.max_width and pin.fill_mode == "shrink":
-            # In shrink mode, no need to calculate optimal font size if it already
-            font = pin.font
-        else:
-            current_font_size = pin.font_size
+            ## FIXME: Sometimes the current_font_size oscillates between two values,
+            ## never meeting the loop condition, creating an infinite loop.
+            ## Temporarily fixed by changing the condition to be more forgiving
 
             while not pin.max_width-(0.05*pin.max_width) <= text_width <= pin.max_width:
                 # Calculate the length of the text with the current font size
-                font = ImageFont.truetype(pin.font_face, int(current_font_size))
+                font = ImageFont.truetype(font_face, int(current_font_size))
                 bbox = font.getbbox(content)
                 text_width = bbox[2] - bbox[0]
 
                 # Calculate the proportion between the difference and the max width
                 diff = pin.max_width - text_width
-                proportion = diff / pin.max_width
+                proportion = diff / text_width
 
                 # Update current font size according to the proportion
-                current_font_size *= (1 + proportion)
-                print(text_width)
+                current_font_size *= (1+proportion)
+
+            return current_font_size
+        """
+        Adds a text pin to the current canvas.
+        """
+
+        # Create inital font and get initial text width
+        init_font = ImageFont.truetype(pin.font_face, pin.font_size)
+        bbox = init_font.getbbox(content)
+        text_width = bbox[2] - bbox[0]
+
+        # If the fill mode is "fill" or the fill mode is "shrink" and the text doesn't fit within the max length,
+        # fit the font size to the maximum length. Otherwise, use the initial font.
+        if pin.fill_mode == "fill" or (text_width > pin.max_width and pin.fill_mode == "shrink"):
+            font_size = _fit_font_size(content, pin.font_size, pin.font_face, text_width)
+            font = ImageFont.truetype(pin.font_face, font_size)
+        else:
+            font = init_font
 
         draw.text(pin.pos, content, font=font, fill=pin.color, align=pin.align)
     
@@ -142,8 +153,6 @@ class TextPin(Pin):
         else:
             raise ValueError(f"Invalid fill mode for TextPin: {fill_mode}, must be fill, shrink, cut, wrap, wordwrap or fixed")
         self.align = align
-
-        self.font = ImageFont.truetype(font, font_size)
 
     def __str__(self):
         return f"TextPin: {self.title}, Column: {self.col}, Position: {self.pos}, Font Face: {self.font_face}, Font Size: {self.font_size}"
