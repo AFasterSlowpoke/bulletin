@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 import pandas as pd
+import os
 
 class Board:
     def __init__(self, data, dimensions=(500,500), output_format="png", mode="RGBA", background_color=None):
@@ -173,22 +174,44 @@ class Board:
             if filepath is None:
                 filepath = f"board-post{data_index}.{self.output_format}"
             else:
-                filepath += self.output_format
+                filepath += f'.{self.output_format}'
             
             canvas.save(filepath)
         
-
     def blueprint(self):
         """
         Creates a post, but with all pins displaying their titles.
         """
         pass
 
-    def publish(self):
+    def publish(self, folder="posts", truncate_old_posts=True):
         """
-        Creates all the images for the data.
+        Creates all the images for the data, and stores them in specified folder.
         """
-        pass
+
+        try:
+            # Make folder
+            os.makedirs(folder)
+        except FileExistsError:
+            # If the foler already exists and the user wishes to truncate old posts, delete all files in folder.
+            if truncate_old_posts:
+                for filename in os.listdir(folder):
+                    file_path = os.path.join(folder, filename) 
+                    try:
+                        if os.path.isfile(file_path):
+                            os.remove(file_path)  
+                        elif os.path.isdir(file_path):  
+                            os.rmdir(file_path)  
+                    except Exception as e:  
+                        print(f"Error deleting {file_path}: {e}")
+                
+                print(f'Folder "{folder}" has been truncated.')
+        finally:
+            # Make posts
+            for i in range(len(self.data)):
+                self.post(i, filepath=f"{folder}/board-post{i}")
+        
+        print(f'Posts successfully published in folder "{folder}".')
 
     def pin(self, *args):
         """
