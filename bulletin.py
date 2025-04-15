@@ -56,39 +56,46 @@ class Board:
                 current_font_size *= (1+proportion)
 
             return current_font_size
-        def _wrap_text(content, font_size, font_face, max_width):
+        def _wrap_text(content, font_size, font_face, max_width, wrap_mode):
             result = []
 
-            for original_line in content.split('\n'):
+            for original_line in content.split("\n"):
                 if not original_line:
                     # Keep empty lines
                     result.append("")
                     continue
                 
                 current_line = ""
+
+                # Split line into tokens, depending on wrap mode
+                # For 'wrap', split into characters. For 'wordwrap', split into words.
+                if wrap_mode == "wrap":
+                    tokens = tuple(original_line)
+                elif wrap_mode == "wordwrap":
+                    tokens = original_line.split(" ")
                 
-                # Process each character in the line
-                for char in original_line:
-                    # Test if adding this character would exceed the max width
-                    test_line = current_line + char
+                # Process each token
+                for token in tokens:
+                    # Test if adding this token would exceed the max width
+                    test_line = current_line + token
                     init_font = ImageFont.truetype(font_face, font_size)
                     bbox = init_font.getbbox(test_line)
                     text_width = bbox[2] - bbox[0]
                     
                     if text_width <= max_width:
-                        # Character fits, add it to the current line
-                        current_line += char
+                        # Token fits, add it to the current line
+                        current_line += f'{token} '
                     else:
-                        # Character doesn't fit, start a new line
+                        # Token doesn't fit, start a new line
                         result.append(current_line)
-                        current_line = char
+                        current_line = f'{token} '
                 
                 # Add the last line segment
                 if current_line:
                     result.append(current_line)
 
             # Join all lines with newlines
-            return '\n'.join(result)
+            return ('\n'.join(result)).lstrip()
 
         """
         Adds a text pin to the current canvas.
@@ -107,8 +114,8 @@ class Board:
         else:
             font = init_font
 
-            if pin.fill_mode == "wrap":
-                content = _wrap_text(content, pin.font_size, pin.font_face, pin.max_width)
+            if pin.fill_mode == "wrap" or "wordwrap":
+                content = _wrap_text(content, pin.font_size, pin.font_face, pin.max_width, pin.fill_mode)
 
         draw.text(pin.pos, content, font=font, fill=pin.color, align=pin.align)
     
