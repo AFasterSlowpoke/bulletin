@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 import pandas as pd
 
 class Board:
-    def __init__(self, data, dimensions=(500,500), output_format="jpg", mode="RGBA", background_color=None):
+    def __init__(self, data, dimensions=(500,500), output_format="png", mode="RGBA", background_color=None):
         self.data = data
 
         self.dimensions = dimensions
@@ -152,19 +152,31 @@ class Board:
         else:
             print(f"{pin} is neither a TextPin or ImagePin")
     
-    def post(self, data_index, display=False):
+    def post(self, data_index, save=True, display=False, filepath=None):
         """
         Creates the appropriate image for a single row of the data.
         """
         
+        # Create canvas and draw object
         canvas = self.new_canvas()
         draw = ImageDraw.Draw(canvas)
 
+        # Add the pins to the canvas
         for pin in self.pins:
             self.paint(draw, pin, data_index)
         
+        # Display and/or save image
         if display:
             canvas.show()
+        
+        if save:
+            if filepath is None:
+                filepath = f"board-post{data_index}.{self.output_format}"
+            else:
+                filepath += self.output_format
+            
+            canvas.save(filepath)
+        
 
     def blueprint(self):
         """
