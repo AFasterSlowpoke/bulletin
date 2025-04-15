@@ -56,6 +56,40 @@ class Board:
                 current_font_size *= (1+proportion)
 
             return current_font_size
+        def _wrap_text(content, font_size, font_face, max_width):
+            result = []
+
+            for original_line in content.split('\n'):
+                if not original_line:
+                    # Keep empty lines
+                    result.append("")
+                    continue
+                
+                current_line = ""
+                
+                # Process each character in the line
+                for char in original_line:
+                    # Test if adding this character would exceed the max width
+                    test_line = current_line + char
+                    init_font = ImageFont.truetype(font_face, font_size)
+                    bbox = init_font.getbbox(test_line)
+                    text_width = bbox[2] - bbox[0]
+                    
+                    if text_width <= max_width:
+                        # Character fits, add it to the current line
+                        current_line += char
+                    else:
+                        # Character doesn't fit, start a new line
+                        result.append(current_line)
+                        current_line = char
+                
+                # Add the last line segment
+                if current_line:
+                    result.append(current_line)
+
+            # Join all lines with newlines
+            return '\n'.join(result)
+
         """
         Adds a text pin to the current canvas.
         """
@@ -72,6 +106,9 @@ class Board:
             font = ImageFont.truetype(pin.font_face, font_size)
         else:
             font = init_font
+
+            if pin.fill_mode == "wrap":
+                content = _wrap_text(content, pin.font_size, pin.font_face, pin.max_width)
 
         draw.text(pin.pos, content, font=font, fill=pin.color, align=pin.align)
     
