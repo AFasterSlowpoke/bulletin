@@ -84,11 +84,15 @@ class Board:
                     
                     if text_width <= max_width:
                         # Token fits, add it to the current line
-                        current_line += f'{token} '
+                        current_line += token
+                        if wrap_mode == "wordwrap":
+                            current_line += " "
                     else:
                         # Token doesn't fit, start a new line
                         result.append(current_line)
-                        current_line = f'{token} '
+                        current_line = token
+                        if wrap_mode == "wordwrap":
+                            current_line += " "
                 
                 # Add the last line segment
                 if current_line:
