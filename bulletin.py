@@ -234,8 +234,15 @@ class Pin:
         return f"Pin: {self.title}, Column: {self.col}, Position: {self.pos}"
 
 class TextPin(Pin):
-    def __init__(self, title, col, pos, font, font_size=32, color=(0,0,0), max_width=1000, fill_mode="shrink", align="left"):
+    def __init__(self, title, col, pos, font, font_size=32, color=(0,0,0), max_width=1000, fill_mode="shrink", default_text=None, align="left", anchor="topright"):
         super().__init__(title, col, pos)
+
+        if not col and not default_text:
+            raise ValueError(f"TextPin must have column or default text or both.")
+        if default_text is None:
+            self.default_text = self.title
+
+        self.default_text = default_text
 
         self.font_face = font
         self.font_size = font_size
@@ -246,13 +253,22 @@ class TextPin(Pin):
             self.fill_mode = fill_mode
         else:
             raise ValueError(f"Invalid fill mode for TextPin: {fill_mode}, must be fill, shrink, cut, wrap, wordwrap or fixed")
+        
         self.align = align
+        self.anchor = anchor
 
     def __str__(self):
         return f"TextPin: {self.title}, Column: {self.col}, Position: {self.pos}, Font Face: {self.font_face}, Font Size: {self.font_size}"
 
 class ImagePin(Pin):
-    pass
+    def __init__(self, title, col, pos, gallery, default_image, dimensions=None, fill_mode="fit"):
+        super().__init__(title, col, pos)
+
+        self.gallery = gallery
+        self.default_image = default_image
+
+        self.dimensions = dimensions
+        self.fill_mode = fill_mode
 
 class PinCondition:
     pass
