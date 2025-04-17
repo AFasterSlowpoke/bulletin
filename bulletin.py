@@ -131,7 +131,35 @@ class Board:
 
         draw.text(pin.pos, content, font=font, fill=pin.color, align=pin.align)
     
-    def paint(self, draw: ImageDraw.ImageDraw, pin: "Pin", data_index):
+    def _image_paint(self, canvas: Image.Image, pin: "ImagePin" , content):
+        """
+        Adds an image pin to the current canvas.
+        """
+
+        # Load corresponding image from gallery.
+        image = None
+
+        for img_format in ("png", "jpg", "bmp", "svg", "heic"):
+            try:
+                image = Image.open(f'{pin.gallery}/{content}.{img_format}')
+            except:
+                pass
+            else:
+                break
+        
+        # Check if image exists
+        if not image:
+            raise FileNotFoundError(f"Image {pin.gallery}/{content} does not exist or is not in acceptable format.")
+        else:
+            if pin.fill_mode == "stretch":
+                pass
+            elif pin.fill_mode == "fit":
+                pass
+
+            # Add image to canvas
+            canvas.paste(image, pin.pos, image)
+    
+    def paint(self, canvas: Image.Image, draw: ImageDraw.ImageDraw, pin: "Pin", data_index):
         """
         Adds a single pin to the current canvas.
         """
@@ -149,7 +177,7 @@ class Board:
         if isinstance(pin, TextPin):
             self._text_paint(draw, pin, content)
         elif isinstance(pin, ImagePin):
-            print(f"{pin} is an ImagePin")
+            self._image_paint(canvas, pin, content)
         else:
             print(f"{pin} is neither a TextPin or ImagePin")
     
@@ -164,7 +192,7 @@ class Board:
 
         # Add the pins to the canvas
         for pin in self.pins:
-            self.paint(draw, pin, data_index)
+            self.paint(canvas, draw, pin, data_index)
         
         # Display and/or save image
         if display:
@@ -261,14 +289,25 @@ class TextPin(Pin):
         return f"TextPin: {self.title}, Column: {self.col}, Position: {self.pos}, Font Face: {self.font_face}, Font Size: {self.font_size}"
 
 class ImagePin(Pin):
-    def __init__(self, title, col, pos, gallery, default_image, dimensions=None, fill_mode="fit"):
+    def __init__(self, title, col, pos, gallery, default_image=None, dimensions=None, fill_mode="fit", anchor="topright"):
         super().__init__(title, col, pos)
+
+        if not col and not default_image:
+            raise ValueError("ImagePin must have column or default image or both.")
 
         self.gallery = gallery
         self.default_image = default_image
 
         self.dimensions = dimensions
-        self.fill_mode = fill_mode
+        if fill_mode in ("fit", "stretch", "fixed"):
+            self.fill_mode = fill_mode
+        else:
+            raise ValueError(f"Invalid fill mode for ImagePin: {fill_mode}, must be fit, stretch or fixed")
+
+        self.anchor = anchor
+    
+    def __str__(self):
+        return f"ImagePin: {self.title}, Column: {self.col}, Position: {self.pos}, Gallery: {self.gallery}"
 
 class PinCondition:
     pass
