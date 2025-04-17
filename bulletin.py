@@ -3,10 +3,10 @@ import pandas as pd
 import os
 
 class Board:
-    def __init__(self, data, dimensions=(500,500), output_format="png", mode="RGBA", background_color=None):
+    def __init__(self, data, dimensions=(500,500), output_format="png", mode="RGBA", background_color=None, background=None):
         self.data = data
 
-        self.dimensions = dimensions
+        
         self.output_format = output_format
         self.mode = mode
         if background_color is None:
@@ -19,6 +19,11 @@ class Board:
             self.background_color = background_color
 
         self.pins = []
+
+        if background is None:
+            self.dimensions = dimensions
+        else:
+            pass
     
     def __str__(self):
         pins_string = ""
@@ -271,24 +276,23 @@ class Board:
                 raise TypeError("Board.pin() method only accepts Pin objects")
 
 class Pin:
-    def __init__(self, title, col, pos):
+    def __init__(self, title, col, pos, default=None):
         self.title = title
         self.col = col
         self.pos = pos
+        self.default = default
     
     def __str__(self):
         return f"Pin: {self.title}, Column: {self.col}, Position: {self.pos}"
 
 class TextPin(Pin):
     def __init__(self, title, col, pos, font, font_size=32, color=(0,0,0), max_width=1000, fill_mode="shrink", default_text=None, align="left", anchor="topright"):
-        super().__init__(title, col, pos)
+        super().__init__(title, col, pos, default_text)
 
         if not col and not default_text:
             raise ValueError(f"TextPin must have column or default text or both.")
         if default_text is None:
-            self.default_text = self.title
-
-        self.default_text = default_text
+            self.default = self.title
 
         self.font_face = font
         self.font_size = font_size
@@ -308,13 +312,12 @@ class TextPin(Pin):
 
 class ImagePin(Pin):
     def __init__(self, title, col, pos, gallery, default_image=None, dimensions=None, fill_mode="fit", anchor="topright"):
-        super().__init__(title, col, pos)
+        super().__init__(title, col, pos, default_image)
 
         if not col and not default_image:
             raise ValueError("ImagePin must have column or default image or both.")
 
         self.gallery = gallery
-        self.default_image = default_image
 
         self.dimensions = dimensions
         if fill_mode in ("fit", "stretch", "fixed"):
