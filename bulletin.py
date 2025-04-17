@@ -151,10 +151,28 @@ class Board:
         if not image:
             raise FileNotFoundError(f"Image {pin.gallery}/{content} does not exist or is not in acceptable format.")
         else:
+            # Adjust image size to dimensions according to fill mode
             if pin.fill_mode == "stretch":
-                pass
+                image = image.resize(pin.dimensions)
             elif pin.fill_mode == "fit":
-                pass
+                # Calculate the optimal dimensions
+                img_width, img_height = image.size
+                max_width, max_height = pin.dimensions
+                optimal_width, optimal_height = 0, 0
+                
+                # If width is larger than height
+                if img_width / img_height > 1:
+                    # Width is the limiting factor
+                    proportion = max_width / img_width
+                    optimal_width = int(proportion * img_width)
+                    optimal_height = int(proportion * img_height)
+                else:
+                    # Height is the limiting factor
+                    proportion = max_height / img_height
+                    optimal_width = int(proportion * img_width)
+                    optimal_height = int(proportion * img_height)
+                
+                image = image.resize((optimal_width, optimal_height))
 
             # Add image to canvas
             canvas.paste(image, pin.pos, image)
