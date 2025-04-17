@@ -146,7 +146,8 @@ class Board:
 
         for img_format in ("png", "jpg", "bmp", "svg", "heic"):
             try:
-                image = Image.open(f'{pin.gallery}/{content}.{img_format}')
+                image = Image.open(f'{"" if pin.gallery is None else f"{pin.gallery}/"}{content}.{img_format}')
+                
             except:
                 pass
             else:
@@ -154,7 +155,7 @@ class Board:
         
         # Check if image exists
         if not image:
-            raise FileNotFoundError(f"Image {pin.gallery}/{content} does not exist or is not in acceptable format.")
+            raise FileNotFoundError(f"Image {"" if pin.gallery is None else f"{pin.gallery}/"}{content} does not exist or is not in acceptable format.")
         else:
             # Adjust image size to dimensions according to fill mode
             if pin.fill_mode == "stretch":
@@ -193,8 +194,11 @@ class Board:
         if not isinstance(draw, ImageDraw.ImageDraw):
             raise TypeError("Board.paint() draw argument is not ImageDraw object.")
         
-        data_row = self.data.iloc[data_index] # Get the row at index
-        content = data_row[pin.col] # Get the data at given column specified in pin
+        if pin.col is None:
+            content = pin.default
+        else:
+            data_row = self.data.iloc[data_index] # Get the row at index
+            content = data_row[pin.col] # Get the data at given column specified in pin
  
         # Pass the pin, canvas and content to the appropriate paint function
         if isinstance(pin, TextPin):
@@ -286,12 +290,12 @@ class Pin:
         return f"Pin: {self.title}, Column: {self.col}, Position: {self.pos}"
 
 class TextPin(Pin):
-    def __init__(self, title, col, pos, font, font_size=32, color=(0,0,0), max_width=1000, fill_mode="shrink", default_text=None, align="left", anchor="topright"):
-        super().__init__(title, col, pos, default_text)
+    def __init__(self, title, col, pos, font, font_size=32, color=(0,0,0), max_width=1000, fill_mode="shrink", default=None, align="left", anchor="topright"):
+        super().__init__(title, col, pos, default)
 
-        if not col and not default_text:
+        if not col and not default:
             raise ValueError(f"TextPin must have column or default text or both.")
-        if default_text is None:
+        if default is None:
             self.default = self.title
 
         self.font_face = font
@@ -311,10 +315,10 @@ class TextPin(Pin):
         return f"TextPin: {self.title}, Column: {self.col}, Position: {self.pos}, Font Face: {self.font_face}, Font Size: {self.font_size}"
 
 class ImagePin(Pin):
-    def __init__(self, title, col, pos, gallery, default_image=None, dimensions=None, fill_mode="fit", anchor="topright"):
-        super().__init__(title, col, pos, default_image)
+    def __init__(self, title, col, pos, gallery, default=None, dimensions=None, fill_mode="fit", anchor="topright"):
+        super().__init__(title, col, pos, default)
 
-        if not col and not default_image:
+        if not col and not default:
             raise ValueError("ImagePin must have column or default image or both.")
 
         self.gallery = gallery
