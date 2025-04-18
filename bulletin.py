@@ -6,7 +6,6 @@ class Board:
     def __init__(self, data, dimensions=(500,500), output_format="png", mode="RGBA", background_color=None, background=None):
         self.data = data
 
-        
         self.output_format = output_format
         self.mode = mode
         if background_color is None:
@@ -18,12 +17,11 @@ class Board:
         else:
             self.background_color = background_color
 
+        self.background = background
         if background is None:
             self.dimensions = dimensions
-            self.background = None
         else:
-            self.background = Image.open(background).convert(self.mode)
-            self.dimensions = self.background.size
+            self.dimensions = Image.open(self.background).convert(self.mode).size
 
         self.pins = []
     
@@ -40,11 +38,11 @@ class Board:
         """
 
         if self.background:
-            return self.background
+            return Image.open(self.background).convert(self.mode)
         else:
             return Image.new(self.mode, self.dimensions, self.background_color)
     
-    def background(self, background):
+    def change_background(self, background):
         """
         Updates the background of the board, and the dimensions to that of the background.
         """
@@ -135,19 +133,32 @@ class Board:
         init_font = ImageFont.truetype(pin.font_face, pin.font_size)
         bbox = init_font.getbbox(content)
         text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
 
         # If the fill mode is "fill" or the fill mode is "shrink" and the text doesn't fit within the max length,
         # fit the font size to the maximum length. Otherwise, use the initial font.
         if pin.fill_mode == "fill" or (text_width > pin.max_width and pin.fill_mode == "shrink"):
             font_size = _fit_font_size(content, pin.font_size, pin.font_face, text_width, pin.max_width)
             font = ImageFont.truetype(pin.font_face, font_size)
+
+            # Recalculate position if pin is anchored
+            if pin.anchor == "bottomleft":
+                new_bbox = font.getbbox(content)
+                new_text_height = new_bbox[3] - new_bbox[1]
+
+                shift = text_height - new_text_height
+                pos = (pin.pos[0], pin.pos[1] + shift)
+            else:
+                pos = pin.pos
         else:
             font = init_font
+            pos = pin.pos
 
+            # Wrap text if fill mode is 'wrap' or 'wordwrap'
             if pin.fill_mode == "wrap" or pin.fill_mode == "wordwrap":
                 content = _wrap_text(content, pin.font_size, pin.font_face, pin.max_width, pin.fill_mode)
 
-        draw.text(pin.pos, content, font=font, fill=pin.color, align=pin.align)
+        draw.text(pos, content, font=font, fill=pin.color, align=pin.align)
     
     def _image_paint(self, canvas: Image.Image, pin: "ImagePin" , content):
         """
@@ -244,7 +255,7 @@ class Board:
             if filepath is None:
                 filepath = f"board-post{data_index}.{self.output_format}"
             else:
-                filepath += f'.{self.output_format}'
+                filepath += f'-{data_index}.{self.output_format}'
             
             canvas.save(filepath)
         
@@ -254,10 +265,12 @@ class Board:
         """
         pass
 
-    def publish(self, folder="posts", truncate_old_posts=True):
+    def publish(self, folder="posts", truncate_old_posts=True, filepath=None):
         """
         Creates all the images for the data, and stores them in specified folder.
         """
+        if filepath is None:
+            filepath=f"{folder}/board-post"
 
         try:
             # Make folder
@@ -279,7 +292,7 @@ class Board:
         finally:
             # Make posts
             for i in range(len(self.data)):
-                self.post(i, filepath=f"{folder}/board-post{i}")
+                self.post(i, filepath)
         
         print(f'Posts successfully published in folder "{folder}".')
 
@@ -305,7 +318,7 @@ class Pin:
         return f"Pin: {self.title}, Column: {self.col}, Position: {self.pos}"
 
 class TextPin(Pin):
-    def __init__(self, title, col, pos, font, font_size=32, color=(0,0,0), max_width=1000, fill_mode="shrink", default=None, align="left", anchor="topright"):
+    def __init__(self, title, col, pos, font, font_size=32, color=(0,0,0), max_width=1000, fill_mode="shrink", default=None, align="left", anchor="topleft"):
         super().__init__(title, col, pos, default)
 
         if not col and not default:
@@ -330,7 +343,7 @@ class TextPin(Pin):
         return f"TextPin: {self.title}, Column: {self.col}, Position: {self.pos}, Font Face: {self.font_face}, Font Size: {self.font_size}"
 
 class ImagePin(Pin):
-    def __init__(self, title, col, pos, gallery, default=None, dimensions=None, fill_mode="fit", anchor="topright"):
+    def __init__(self, title, col, pos, gallery, default=None, dimensions=None, fill_mode="fit", anchor="topleft"):
         super().__init__(title, col, pos, default)
 
         if not col and not default:
