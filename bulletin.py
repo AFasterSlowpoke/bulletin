@@ -45,6 +45,10 @@ class Board:
             return Image.new(self.mode, self.dimensions, self.background_color)
     
     def background(self, background):
+        """
+        Updates the background of the board, and the dimensions to that of the background.
+        """
+
         self.background = Image.open(background).convert(self.mode)
         self.dimensions = self.background.size
 
@@ -207,6 +211,9 @@ class Board:
         else:
             data_row = self.data.iloc[data_index] # Get the row at index
             content = data_row[pin.col] # Get the data at given column specified in pin
+
+            if pd.isna(content):
+                content = pin.default
  
         # Pass the pin, canvas and content to the appropriate paint function
         if isinstance(pin, TextPin):
@@ -343,9 +350,6 @@ class ImagePin(Pin):
         return f"ImagePin: {self.title}, Column: {self.col}, Position: {self.pos}, Gallery: {self.gallery}"
 
 class PinCondition:
-    pass
-
-class Gallery:
     pass
 
 def read_from_gsheet(sheet_name, sheet_id, table_id='0'):
