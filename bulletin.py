@@ -18,12 +18,14 @@ class Board:
         else:
             self.background_color = background_color
 
-        self.pins = []
-
         if background is None:
             self.dimensions = dimensions
+            self.background = None
         else:
-            pass
+            self.background = Image.open(background).convert(self.mode)
+            self.dimensions = self.background.size
+
+        self.pins = []
     
     def __str__(self):
         pins_string = ""
@@ -37,7 +39,14 @@ class Board:
         Returns a blank image with the board's specified mode and background color
         """
 
-        return Image.new(self.mode, self.dimensions, self.background_color)
+        if self.background:
+            return self.background
+        else:
+            return Image.new(self.mode, self.dimensions, self.background_color)
+    
+    def background(self, background):
+        self.background = Image.open(background).convert(self.mode)
+        self.dimensions = self.background.size
 
     def _text_paint(self, draw: ImageDraw.ImageDraw, pin: "TextPin", content):
         def _fit_font_size(content, initial_font_size, font_face, init_text_width, max_width):
