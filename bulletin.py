@@ -362,6 +362,9 @@ class ImagePin(Pin):
     def __str__(self):
         return f"ImagePin: {self.title}, Column: {self.col}, Position: {self.pos}, Gallery: {self.gallery}"
 
+class PostPin(Pin):
+    pass
+
 class PinCondition:
     pass
 
