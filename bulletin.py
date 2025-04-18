@@ -146,8 +146,7 @@ class Board:
 
         for img_format in ("png", "jpg", "bmp", "svg", "heic"):
             try:
-                image = Image.open(f'{"" if pin.gallery is None else f"{pin.gallery}/"}{content}.{img_format}')
-                
+                image = Image.open(f'{"" if pin.gallery is None else f"{pin.gallery}/"}{content}.{img_format}').convert(self.mode)
             except:
                 pass
             else:
