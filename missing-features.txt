@@ -1,0 +1,35 @@
+Most notable missing features:
+
+MUST BE MADE INTO GITHUB REPO ASAP
+Sorry I can't access github at the moment ;(
+
+No way to change the properties of pins depending on the content.
+The intended solution to this was the PinCondition object, which could be passed
+as an argument in place of any pin property such as font, position, color, etc.
+PinConditions would be given a column or group of columns to check, a series of
+conditions, and return values for those conditions.
+For example, "Check 'rank' column. If it's 1, return yellow, if not return black."
+
+One image per row, one row per image
+If you want to include multiple rows of data in a single image, you're out of luck.
+One proposed feature is the PostPin, which allows you to add a post of one board
+as a pin to another board.
+For example, you could create a board for making response strips, and then add posts
+from that board using PostPins to another board, which consolidates them.
+Boards would also need ways to batch data to do this.
+
+Only one table per board
+
+Google sheets Only
+
+Absolute positions only, no containers
+Lists, Grids and other containers are not implemented as of yet.
+
+Only two kinds of basic pins: Text and image
+ShapePins, EffectPins, etc would be great.
+
+No support for randomness
+
+No text align
+
+Bug where transparent images display checkerboards behind them

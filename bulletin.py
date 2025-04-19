@@ -257,6 +257,7 @@ class Board:
             else:
                 filepath += f'-{data_index}.{self.output_format}'
             
+            print(filepath)
             canvas.save(filepath)
         
     def blueprint(self):
@@ -292,7 +293,7 @@ class Board:
         finally:
             # Make posts
             for i in range(len(self.data)):
-                self.post(i, filepath)
+                self.post(i, filepath=filepath)
         
         print(f'Posts successfully published in folder "{folder}".')
 
