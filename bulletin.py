@@ -178,7 +178,9 @@ class Board:
         
         # Check if image exists
         if not image:
-            raise FileNotFoundError(f"Image {"" if pin.gallery is None else f"{pin.gallery}/"}{content} does not exist or is not in acceptable format.")
+            pass #new code, it simply does nothing instead of raising an error if an image cannot be found
+            #old code below
+            #raise FileNotFoundError(f"Image {"" if pin.gallery is None else f"{pin.gallery}/"}{content} does not exist or is not in acceptable format.")
         else:
             # Adjust image size to dimensions according to fill mode
             if pin.fill_mode == "stretch":
