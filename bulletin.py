@@ -178,8 +178,7 @@ class Board:
         
         # Check if image exists
         if not image:
-            pass #new code, it simply does nothing instead of raising an error if an image cannot be found
-            #old code below
+            pass
             #raise FileNotFoundError(f"Image {"" if pin.gallery is None else f"{pin.gallery}/"}{content} does not exist or is not in acceptable format.")
         else:
             # Adjust image size to dimensions according to fill mode
@@ -379,4 +378,11 @@ def read_from_gsheet(sheet_name, sheet_id, table_id='0'):
 
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}&gid={table_id}"
 
+    print(pd.read_csv(url))
     return pd.read_csv(url)
+
+
+def read_from_excel(sheet_name, sheet_id):
+    df = pd.read_excel(sheet_name)
+    print(df)
+    return df

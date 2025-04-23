@@ -1,6 +1,8 @@
-from bulletin import Board, TextPin, ImagePin, read_from_gsheet
+from bulletin import Board, TextPin, ImagePin, read_from_gsheet, read_from_excel
 
-response_data = read_from_gsheet("BulletinTestData", "1br5l-96rxedgr00yXyZZAoV2A8Fn_YpfHtM3r8mKqug")
+#response_data = read_from_gsheet("BulletinTestData", "1br5l-96rxedgr00yXyZZAoV2A8Fn_YpfHtM3r8mKqug")
+response_data = read_from_excel("BulletinTestData.xlsx", "Sheet1")
+
  
 board = Board(response_data, background="background.jpg")
 
