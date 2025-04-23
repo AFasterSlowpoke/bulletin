@@ -3,3 +3,9 @@ The exact same thing as https://github.com/smoov22/bulletin , but it simply does
 Offline compatability may be coming soon (where you can get data from a local Excel or CSV file and not be forced to get something from a Google Sheets file)
 
 i literally only changed one line xD
+
+You need to install these modules first:
+pandas
+Pillow
+openpyxl
+os
